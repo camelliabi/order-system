@@ -11,6 +11,11 @@ export default function OrderCard({ order, onAccept, onMarkReady, isProcessing }
     }
   };
 
+  // Open print receipt in new window
+  const handlePrint = () => {
+    window.open(`/staff/print/${order.orderId}`, '_blank', 'width=400,height=600');
+  };
+
   // Format time
   const formatTime = (dateString) => {
     try {
@@ -208,6 +213,12 @@ export default function OrderCard({ order, onAccept, onMarkReady, isProcessing }
           disabled={isProcessing}
         >
           {isProcessing ? 'Processing...' : 'Mark Ready'}
+        </button>
+        <button
+          className="btn btn-print"
+          onClick={handlePrint}
+        >
+          Print
         </button>
       </div>
     </div>
