@@ -1,6 +1,7 @@
 package com.camellia.ordersystem.order;
 import java.util.List;
 import java.util.ArrayList;
+import java.time.LocalDateTime;
 import com.camellia.ordersystem.menu.MenuItem;
 
 
@@ -10,6 +11,7 @@ public class Order {
     private double totalPrice;
     private List<OrderItem> orderItems = new ArrayList<OrderItem>();
     private String orderStatus;
+    private LocalDateTime createdAt;
 
     public Order() {
         
@@ -55,6 +57,14 @@ public class Order {
 
     public void setOrderStatus(String status) {
         this.orderStatus = status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public void addItems(List<OrderItem> items) {
