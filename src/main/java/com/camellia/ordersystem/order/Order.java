@@ -33,9 +33,44 @@ public class Order {
         return orderItems;
     }
 
+    /**
+     * Calculate the actual price for an order item including chosen option and notes
+     * @param orderItem The order item to calculate price for
+     * @return The total price for this item (base/option price + note prices)
+     */
+    private double calculateItemPrice(OrderItem orderItem) {
+        MenuItem menuItem = orderItem.getMenuItem();
+        double itemPrice = menuItem.getItemPrice(); // Start with base price
+        
+        // If customer chose an option (e.g., "Chicken" instead of base "Fried Rice")
+        // Use the option's price instead of base price
+        if (orderItem.getChosenOption() != null && !orderItem.getChosenOption().trim().isEmpty()) {
+            String chosenOptionName = orderItem.getChosenOption().trim();
+            Map<String, Double> options = menuItem.getOptions();
+            
+            if (options != null && options.containsKey(chosenOptionName)) {
+                itemPrice = options.get(chosenOptionName); // Replace base price with option price
+            }
+        }
+        
+        // Add note/add-on prices (e.g., "Add rice" costs extra $1.00)
+        if (orderItem.getNote() != null && !orderItem.getNote().trim().isEmpty()) {
+            String noteName = orderItem.getNote().trim();
+            Map<String, Double> notes = menuItem.getNotes();
+            
+            if (notes != null && notes.containsKey(noteName)) {
+                double notePrice = notes.get(noteName);
+                itemPrice += notePrice; // Add note price to total
+            }
+        }
+        
+        return itemPrice;
+    }
+
     public void addItem(MenuItem item, int quantity) {
-        orderItems.add(new OrderItem(item, quantity));
-        totalPrice += item.getItemPrice() * quantity;
+        OrderItem orderItem = new OrderItem(item, quantity);
+        orderItems.add(orderItem);
+        totalPrice += calculateItemPrice(orderItem) * quantity;
     }
 
     public void removeItem(MenuItem item, int quantity) {
@@ -43,7 +78,7 @@ public class Order {
             OrderItem orderItem = orderItems.get(i);
             if (orderItem.getMenuItem().getItemId() == item.getItemId() && orderItem.getQuantity() == quantity) {
                 orderItems.remove(i);
-                totalPrice -= item.getItemPrice() * quantity;
+                totalPrice -= calculateItemPrice(orderItem) * quantity;
                 break;
             }
         }
@@ -60,7 +95,7 @@ public class Order {
     public void addItems(List<OrderItem> items) {
         for (OrderItem orderItem : items) {
             orderItems.add(orderItem);
-            totalPrice += orderItem.getMenuItem().getItemPrice() * orderItem.getQuantity();
+            totalPrice += calculateItemPrice(orderItem) * orderItem.getQuantity();
         }
     }
 }
