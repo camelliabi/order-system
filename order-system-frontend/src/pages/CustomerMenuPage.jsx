@@ -97,22 +97,23 @@ export default function CustomerMenuPage() {
   };
 
   // Helper function to extract chosenOption as a string
-  // Converts from string or object { label: "...", price: ... }
+  // Converts from string or object { name: "...", price: ... }
   const getChosenOptionString = (option) => {
     if (typeof option === 'string') {
       return option || null;
     }
-    if (option?.label) {
-      return option.label;
-    }
     if (option?.name) {
       return option.name;
+    }
+    if (option?.label) {
+      return option.label;
     }
     return null;
   };
 
   // Helper function to extract notes as string[]
-  // Converts from array of strings or array of objects { label: "...", price: ... }
+  // Converts from array of strings or array of objects { name: "...", price: ... }
+  // FIXED: Now correctly checks for note.name (not note.label)
   const getNotesArray = (notes) => {
     if (!Array.isArray(notes)) {
       return [];
@@ -121,6 +122,11 @@ export default function CustomerMenuPage() {
       if (typeof note === 'string') {
         return note;
       }
+      // FIX: Check for note.name first (AddToCartModal uses {name, price})
+      if (note?.name) {
+        return note.name;
+      }
+      // Fallback to label for backward compatibility
       if (note?.label) {
         return note.label;
       }
@@ -157,12 +163,22 @@ export default function CustomerMenuPage() {
         return;
       }
 
+      const notesArray = getNotesArray(cartItem.selectedNotes);
+      
+      // Debug log to verify notes are being extracted
+      console.log('Processing cart item:', {
+        itemId: numericId,
+        itemName: cartItem.itemName,
+        selectedNotes: cartItem.selectedNotes,
+        extractedNotes: notesArray
+      });
+
       itemsPayload.push({
         menuItemId: numericId,
         quantity: cartItem.qty || 1,
         customerName: cartItem.customerName || null,
         chosenOption: getChosenOptionString(cartItem.selectedOption),
-        notes: getNotesArray(cartItem.selectedNotes),
+        notes: notesArray,
       });
     }
 
