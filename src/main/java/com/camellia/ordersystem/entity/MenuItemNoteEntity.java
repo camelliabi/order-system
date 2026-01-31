@@ -3,6 +3,8 @@ package com.camellia.ordersystem.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "menu_item_note")
 public class MenuItemNoteEntity {
@@ -13,7 +15,8 @@ public class MenuItemNoteEntity {
     private Integer noteId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "item_id", nullable = false)
+    @JoinColumn(name = "menu_item_id")
+    @JsonIgnore   
     private MenuItemEntity menuItem;
 
     @Column(name = "note_name", nullable = false)

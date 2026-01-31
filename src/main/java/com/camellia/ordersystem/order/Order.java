@@ -14,12 +14,14 @@ public class Order {
     private Timestamp createdAt;
 
     public Order() {
+        setTotalPrice();
         
     }
 
     public Order(int orderId, String tableId) {
         this.orderId = orderId;
         this.tableId = tableId;
+        setTotalPrice();
     }
 
     public int getOrderId() {
@@ -28,7 +30,18 @@ public class Order {
     public String getTableId() {
         return tableId;
     }
+
+    public void setTotalPrice(){
+        double total = 0;
+        for(OrderItem itm : orderItems) {
+            total += this.calculateItemPrice(itm);
+        }
+        totalPrice = total;
+
+    }
+
     public double getTotalPrice() {
+
         return totalPrice;
     }
     public List<OrderItem> getOrderItems() {
@@ -73,6 +86,7 @@ public class Order {
         OrderItem orderItem = new OrderItem(item, quantity);
         orderItems.add(orderItem);
         totalPrice += calculateItemPrice(orderItem) * quantity;
+        
     }
 
     public void removeItem(MenuItem item, int quantity) {

@@ -12,17 +12,18 @@ export async function fetchOrdersByStatus(status = 'NEW') {
       tableNo: order.tableId,  // Map tableId to tableNo
       createdAt: order.createdAt || new Date().toISOString(),
       items: (order.orderItems || []).map(item => ({
-        // Flatten menuItem properties to item level for easy access
-        itemId: item.menuItem?.itemId,
-        itemName: item.menuItem?.itemName || '',
-        unitPrice: item.menuItem?.itemPrice || 0,
+        // Flatten backend DTO properties to item level for easy access
+        itemId: item.menuItemId || null,
+        itemName: item.itemName || '',
+        unitPrice: item.unitPrice || 0,
         qty: item.quantity || 0,
         customerName: item.customerName || null,
-        // Extract the CHOSEN option and note from OrderItem (what customer selected)
+        // Extract the CHOSEN option and notesText from backend DTO
         chosenOption: item.chosenOption || null,
-        chosenNote: item.note || null,
-        // IMPORTANT: Keep menuItem structure for available options/notes (they are map objects)
-        menuItem: item.menuItem || {},
+        chosenNote: item.notesText || null,
+        notesText: item.notesText || null,
+        // Keep a placeholder for menuItem structure (backend no longer returns full menuItem entity)
+        menuItem: {},
       })),
       total: order.totalPrice || 0,  // Use totalPrice directly from backend
     }));

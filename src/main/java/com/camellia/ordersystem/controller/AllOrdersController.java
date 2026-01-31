@@ -1,72 +1,56 @@
 package com.camellia.ordersystem.controller;
-import com.camellia.ordersystem.order.Order;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.camellia.ordersystem.menu.MenuItem;
-import com.camellia.ordersystem.order.OrderItem;
-import java.sql.Timestamp;
+import com.camellia.ordersystem.entity.OrderEntity;
+import com.camellia.ordersystem.entity.OrderItemEntity;
+import com.camellia.ordersystem.entity.MenuItemEntity;
+import com.camellia.ordersystem.repo.OrderRepository;
+import com.camellia.ordersystem.dto.OrderResponseDto;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-public class AllOrdersController { 
+public class AllOrdersController {
 
-    public List<OrderItem> orderItems1() {
-        MenuItem menuItem1 = new MenuItem(1, "Fried Rice", 8.99);
-        MenuItem menuItem2 = new MenuItem(2, "Beef Noodles", 12.99);
-        OrderItem item1 = new OrderItem(menuItem1, 1);
-        OrderItem item2 = new OrderItem(menuItem2, 3);
+    private final OrderRepository orderRepo;
 
-        return List.of(
-                item1,
-                item2
-        );
-    }
-
-    public List<OrderItem> orderItems() {
-        MenuItem menuItem1 = new MenuItem(1, "Fried Rice", 8.99);
-        menuItem1.addOption("Chicken", 8.99);
-        menuItem1.addOption("Beef", 9.99);
-        menuItem1.addNote("No onions", 0);
-        menuItem1.addNote("Add rice", 1.00);
-
-        MenuItem menuItem2 = new MenuItem(2, "Beef Noodles", 12.99);
-        MenuItem menuItem3 = new MenuItem(3, "Spring Rolls", 5.49);
-
-        OrderItem item1 = new OrderItem(menuItem1, 2, "John Doe");
-        item1.setChosenOption("Chicken");
-        item1.setNote("No onions");
-        
-        
-
-        OrderItem item2 = new OrderItem(menuItem2, 1, "Jane Smith");
-        OrderItem item3 = new OrderItem(menuItem3, 3, "Alice Johnson");
-
-        return List.of(
-                item1,
-                item2,
-                item3
-        );
+    public AllOrdersController(OrderRepository orderRepo) {
+        this.orderRepo = orderRepo;
     }
 
     @GetMapping("/all_orders")
-    public List<Order> allOrders() {
-        Order order1 = new Order(101, "A1");
-        order1.addItems(orderItems());
-        Timestamp now = new Timestamp(System.currentTimeMillis());
-        order1.setCreatedAt(now);
+    public List<OrderResponseDto> allOrders() {
+        // Return DTOs to avoid exposing JPA entities and to include menu item details
+        List<OrderEntity> orders = orderRepo.findAll();
+        List<OrderResponseDto> out = new java.util.ArrayList<>();
 
-        Order order2 = new Order(102, "B2");
-        order2.addItems(orderItems1());
+        for (OrderEntity oe : orders) {
+            OrderResponseDto dto = new OrderResponseDto();
+            dto.orderId = oe.getOrderId();
+            dto.tableId = oe.getTableId();
+            dto.totalPrice = oe.getTotalPrice();
+            dto.orderStatus = oe.getOrderStatus();
+            dto.createdAt = oe.getCreatedAt();
 
-        return List.of(
-                order1,
-                order2
- 
-        );
+            for (OrderItemEntity oie : oe.getOrderItems()) {
+                OrderResponseDto.OrderItemResponseDto itemDto = new OrderResponseDto.OrderItemResponseDto();
+                MenuItemEntity mi = oie.getMenuItem();
+                if (mi != null) {
+                    itemDto.menuItemId = mi.getItemId();
+                    itemDto.itemName = mi.getItemName();
+                    itemDto.unitPrice = mi.getItemPrice();
+                }
+                itemDto.quantity = oie.getQuantity();
+                itemDto.chosenOption = oie.getChosenOption();
+                itemDto.notesText = oie.getNotesText();
+                itemDto.customerName = oie.getCustomerName();
+                dto.orderItems.add(itemDto);
+            }
+
+            out.add(dto);
+        }
+
+        return out;
     }
 }
