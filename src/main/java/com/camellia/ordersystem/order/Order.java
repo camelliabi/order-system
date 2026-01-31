@@ -1,5 +1,6 @@
 package com.camellia.ordersystem.order;
 import java.util.List;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import com.camellia.ordersystem.menu.MenuItem;
 import java.util.Map;
@@ -10,6 +11,7 @@ public class Order {
     private double totalPrice;
     private List<OrderItem> orderItems = new ArrayList<OrderItem>();
     private String orderStatus;
+    private Timestamp createdAt;
 
     public Order() {
         
@@ -90,6 +92,14 @@ public class Order {
 
     public void setOrderStatus(String status) {
         this.orderStatus = status;
+    }
+
+    public Timestamp getCreatedAt(){
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp time){
+        this.createdAt = time;
     }
 
     public void addItems(List<OrderItem> items) {

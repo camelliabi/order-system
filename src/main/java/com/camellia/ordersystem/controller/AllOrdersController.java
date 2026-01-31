@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.camellia.ordersystem.menu.MenuItem;
 import com.camellia.ordersystem.order.OrderItem;
+import java.sql.Timestamp;
 
 import java.util.List;
 
@@ -40,6 +41,7 @@ public class AllOrdersController {
         item1.setChosenOption("Chicken");
         item1.setNote("No onions");
         
+        
 
         OrderItem item2 = new OrderItem(menuItem2, 1, "Jane Smith");
         OrderItem item3 = new OrderItem(menuItem3, 3, "Alice Johnson");
@@ -55,6 +57,8 @@ public class AllOrdersController {
     public List<Order> allOrders() {
         Order order1 = new Order(101, "A1");
         order1.addItems(orderItems());
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        order1.setCreatedAt(now);
 
         Order order2 = new Order(102, "B2");
         order2.addItems(orderItems1());
