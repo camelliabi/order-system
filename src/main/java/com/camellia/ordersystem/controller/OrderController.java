@@ -141,14 +141,17 @@ public class OrderController {
                 String trimmedNoteName = noteName.trim();
                 if (!trimmedNoteName.isEmpty()) {
                     // Find matching note and add its price
-                    menuItem.getNotes().stream()
+                    // FIXED: BigDecimal is immutable, must reassign
+                    BigDecimal notePrice = menuItem.getNotes().stream()
                             .filter(note -> note.getNoteName().equals(trimmedNoteName))
                             .findFirst()
-                            .ifPresent(note -> {
-                                BigDecimal notePrice = note.getNotePrice();
-                                price.add(notePrice);
-                                logger.debug("Found note '{}' with price: {}", trimmedNoteName, notePrice);
-                            });
+                            .map(MenuItemNoteEntity::getNotePrice)
+                            .orElse(BigDecimal.ZERO);
+                    
+                    if (notePrice.compareTo(BigDecimal.ZERO) > 0) {
+                        price = price.add(notePrice);
+                        logger.debug("Found note '{}' with price: {}", trimmedNoteName, notePrice);
+                    }
                 }
             }
         }
