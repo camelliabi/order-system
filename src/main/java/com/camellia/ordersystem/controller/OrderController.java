@@ -4,6 +4,8 @@ import com.camellia.ordersystem.dto.CreateOrderRequest;
 import com.camellia.ordersystem.entity.OrderEntity;
 import com.camellia.ordersystem.entity.OrderItemEntity;
 import com.camellia.ordersystem.entity.MenuItemEntity;
+import com.camellia.ordersystem.entity.MenuItemOptionEntity;
+import com.camellia.ordersystem.entity.MenuItemNoteEntity;
 import com.camellia.ordersystem.repo.MenuItemRepository;
 import com.camellia.ordersystem.repo.OrderRepository;
 import org.springframework.web.bind.annotation.*;
@@ -91,16 +93,70 @@ public class OrderController {
                 oi.setNotesText(notesTextToStore);
             }
 
+            // FIXED: Calculate actual unit price including option and notes
+            BigDecimal unitPrice = calculateUnitPrice(menuItem, it.chosenOption, notesTextToStore);
+            oi.setUnitPrice(unitPrice);
+            
+            logger.info("Item pricing: menuItemId={}, basePrice={}, chosenOption={}, notes={}, calculatedUnitPrice={}", 
+                    menuItemId, menuItem.getItemPrice(), it.chosenOption, notesTextToStore, unitPrice);
+
             order.addItem(oi);
 
-            // MVP 总价：先用 base price * qty
-           total = total.add(menuItem.getItemPrice().multiply(BigDecimal.valueOf(it.quantity)));
-           
+            // Calculate total using the actual unit price
+            total = total.add(unitPrice.multiply(BigDecimal.valueOf(it.quantity)));
         }
 
-       order.setTotalPrice(total);
+        order.setTotalPrice(total);
 
         return orderRepo.save(order);
+    }
+
+    /**
+     * Calculate the actual unit price for an order item.
+     * Price = chosen option price (or base price if no option) + sum of all note prices
+     */
+    private BigDecimal calculateUnitPrice(MenuItemEntity menuItem, String chosenOption, String notesText) {
+        BigDecimal price = BigDecimal.ZERO;
+
+        // 1. Get the option price (if option is chosen, use its price; otherwise use base price)
+        if (chosenOption != null && !chosenOption.trim().isEmpty()) {
+            // Find the matching option
+            BigDecimal optionPrice = menuItem.getOptions().stream()
+                    .filter(opt -> opt.getOptionName().equals(chosenOption.trim()))
+                    .findFirst()
+                    .map(MenuItemOptionEntity::getOptionPrice)
+                    .orElse(menuItem.getItemPrice()); // Fallback to base price if option not found
+            price = price.add(optionPrice);
+            logger.debug("Found option '{}' with price: {}", chosenOption, optionPrice);
+        } else {
+            // No option chosen, use base price
+            price = price.add(menuItem.getItemPrice());
+        }
+
+        // 2. Add prices for all selected notes
+        if (notesText != null && !notesText.trim().isEmpty()) {
+            // Split notes by comma (as they're stored as "note1, note2, note3")
+            String[] noteNames = notesText.split(",");
+            for (String noteName : noteNames) {
+                String trimmedNoteName = noteName.trim();
+                if (!trimmedNoteName.isEmpty()) {
+                    // Find matching note and add its price
+                    // FIXED: BigDecimal is immutable, must reassign
+                    BigDecimal notePrice = menuItem.getNotes().stream()
+                            .filter(note -> note.getNoteName().equals(trimmedNoteName))
+                            .findFirst()
+                            .map(MenuItemNoteEntity::getNotePrice)
+                            .orElse(BigDecimal.ZERO);
+                    
+                    if (notePrice.compareTo(BigDecimal.ZERO) > 0) {
+                        price = price.add(notePrice);
+                        logger.debug("Found note '{}' with price: {}", trimmedNoteName, notePrice);
+                    }
+                }
+            }
+        }
+
+        return price;
     }
 }
 

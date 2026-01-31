@@ -3,6 +3,7 @@ package com.camellia.ordersystem.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name="order_item")
@@ -35,16 +36,22 @@ public class OrderItemEntity {
     @Column(name="notes_text")
     private String notesText;
 
+    // Store the calculated unit price (base + option + notes) at the time of order
+    @Column(name="unit_price", precision=10, scale=2)
+    private BigDecimal unitPrice;
+
     public void setOrder(OrderEntity order) { this.order = order; }
     public void setMenuItem(MenuItemEntity menuItem) { this.menuItem = menuItem; }
     public void setQuantity(Integer quantity) { this.quantity = quantity; }
     public void setCustomerName(String customerName) { this.customerName = customerName; }
     public void setChosenOption(String chosenOption) { this.chosenOption = chosenOption; }
     public void setNotesText(String notesText) { this.notesText = notesText; }
+    public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
 
     public MenuItemEntity getMenuItem() { return menuItem; }
     public Integer getQuantity() { return quantity; }
     public String getCustomerName() { return customerName; }
     public String getChosenOption() { return chosenOption; }
     public String getNotesText() { return notesText; }
+    public BigDecimal getUnitPrice() { return unitPrice; }
 }
