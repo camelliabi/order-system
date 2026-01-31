@@ -39,8 +39,12 @@ public class AllOrdersController {
                 if (mi != null) {
                     itemDto.menuItemId = mi.getItemId();
                     itemDto.itemName = mi.getItemName();
-                    itemDto.unitPrice = mi.getItemPrice();
                 }
+                
+                // FIXED: Use the stored unit price (which includes option and notes)
+                // instead of the base menu item price
+                itemDto.unitPrice = oie.getUnitPrice();
+                
                 itemDto.quantity = oie.getQuantity();
                 itemDto.chosenOption = oie.getChosenOption();
                 itemDto.notesText = oie.getNotesText();
