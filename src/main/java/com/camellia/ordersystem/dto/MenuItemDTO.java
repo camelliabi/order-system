@@ -1,19 +1,33 @@
 package com.camellia.ordersystem.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 import java.util.Map;
 
 /**
  * Data Transfer Object for menu items.
  * FIXED: All fields now properly encapsulated with consistent getters/setters.
+ * FIXED: Added @JsonProperty annotations for reliable JSON serialization.
  */
 public class MenuItemDTO {
     // FIXED: Made all fields private for proper encapsulation
+    // FIXED: Added @JsonProperty to ensure correct JSON field names
+    @JsonProperty("itemId")
     private Integer itemId;
+    
+    @JsonProperty("itemName")
     private String itemName;
+    
+    @JsonProperty("itemPrice")
     private BigDecimal itemPrice;
+    
+    @JsonProperty("soldout")
     private boolean soldout;  // FIXED: Consistent boolean type
+    
+    @JsonProperty("options")
     private Map<String, BigDecimal> options;
+    
+    @JsonProperty("notes")
     private Map<String, BigDecimal> notes;
 
     public MenuItemDTO(){}
