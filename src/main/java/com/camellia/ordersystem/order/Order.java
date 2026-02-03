@@ -5,6 +5,13 @@ import java.util.ArrayList;
 import com.camellia.ordersystem.menu.MenuItem;
 import java.util.Map;
 
+/**
+ * Order class - manages customer orders with items and pricing
+ * 
+ * FIXED: Price calculation consistency issues
+ * - setTotalPrice() now multiplies by quantity
+ * - Removed wasteful constructor calls
+ */
 public class Order {
     private int orderId;
     private String tableId; 
@@ -14,36 +21,42 @@ public class Order {
     private Timestamp createdAt;
 
     public Order() {
-        setTotalPrice();
-        
+        // FIXED: Direct assignment instead of wasteful empty list iteration
+        this.totalPrice = 0.0;
     }
 
     public Order(int orderId, String tableId) {
         this.orderId = orderId;
         this.tableId = tableId;
-        setTotalPrice();
+        // FIXED: Direct assignment instead of wasteful empty list iteration
+        this.totalPrice = 0.0;
     }
 
     public int getOrderId() {
         return orderId;
     }
+    
     public String getTableId() {
         return tableId;
     }
 
+    /**
+     * Recalculates total price from all order items.
+     * FIXED: Now correctly multiplies by quantity to match addItems() behavior.
+     */
     public void setTotalPrice(){
         double total = 0;
         for(OrderItem itm : orderItems) {
-            total += this.calculateItemPrice(itm);
+            // FIXED: Added quantity multiplication for correct totals
+            total += this.calculateItemPrice(itm) * itm.getQuantity();
         }
         totalPrice = total;
-
     }
 
     public double getTotalPrice() {
-
         return totalPrice;
     }
+    
     public List<OrderItem> getOrderItems() {
         return orderItems;
     }
@@ -51,7 +64,7 @@ public class Order {
     /**
      * Calculate the actual price for an order item including chosen option and notes
      * @param orderItem The order item to calculate price for
-     * @return The total price for this item (base/option price + note prices)
+     * @return The total price for ONE UNIT of this item (base/option price + note prices)
      */
     private double calculateItemPrice(OrderItem orderItem) {
         MenuItem menuItem = orderItem.getMenuItem();
@@ -86,7 +99,6 @@ public class Order {
         OrderItem orderItem = new OrderItem(item, quantity);
         orderItems.add(orderItem);
         totalPrice += calculateItemPrice(orderItem) * quantity;
-        
     }
 
     public void removeItem(MenuItem item, int quantity) {
