@@ -22,24 +22,26 @@ public class MenuController {
 
         return menuRepo.findAll().stream().map(item -> {
             MenuItemDTO dto = new MenuItemDTO();
-            dto.itemId = item.getItemId();
-            dto.itemName = item.getItemName();
-            dto.itemPrice = item.getItemPrice();
+            // FIXED: Use setters instead of direct field access
+            dto.setItemId(item.getItemId());
+            dto.setItemName(item.getItemName());
+            dto.setItemPrice(item.getItemPrice());
             dto.setSoldout(item.getSoldout());
 
-            dto.options = item.getOptions() == null ? Map.of()
+            // FIXED: Use setters for collections too
+            dto.setOptions(item.getOptions() == null ? Map.of()
                 : item.getOptions().stream()
                     .collect(Collectors.toMap(
                         o -> o.getOptionName(),
                         o -> o.getOptionPrice()
-                    ));
+                    )));
 
-            dto.notes = item.getNotes() == null ? Map.of()
+            dto.setNotes(item.getNotes() == null ? Map.of()
                 : item.getNotes().stream()
                     .collect(Collectors.toMap(
                         n -> n.getNoteName(),
                         n -> n.getNotePrice()
-                    ));
+                    )));
 
             return dto;
         }).toList();
