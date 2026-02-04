@@ -30,7 +30,9 @@ export default function StaffOrdersPage() {
       if (data.length > 0 && data[0].items.length > 0) {
         console.log('[DEBUG StaffOrdersPage] First order:', data[0]);
       }
-      setOrders(data);
+      // Sort orders by orderId in descending order (newest first)
+      const sortedOrders = [...data].sort((a, b) => b.orderId - a.orderId);
+      setOrders(sortedOrders);
       setLastUpdated(new Date());
     } catch (err) {
       if (err.name !== 'AbortError') {
