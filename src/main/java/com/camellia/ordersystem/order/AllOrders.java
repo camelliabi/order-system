@@ -1,28 +1,42 @@
 package com.camellia.ordersystem.order;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AllOrders {
     
-    List<Order> orders;
+    private List<Order> orders;
 
     public AllOrders() {
-        
+        // FIX: Initialize orders list to prevent NullPointerException
+        this.orders = new ArrayList<>();
     }
 
     public List<Order> getOrders() {
-        return orders;
+        // FIX: Return empty list if orders is somehow null
+        return orders != null ? orders : new ArrayList<>();
     }
 
     public void setOrders(List<Order> orders) {
-        this.orders = orders;
+        // FIX: Initialize with empty list if null is passed
+        this.orders = orders != null ? orders : new ArrayList<>();
     }
 
     public void addOrder(Order order) {
-        orders.add(order);
+        // FIX: Add null check for defensive programming
+        if (order != null) {
+            // FIX: Ensure orders list is initialized
+            if (this.orders == null) {
+                this.orders = new ArrayList<>();
+            }
+            orders.add(order);
+        }
     }
 
     public void removeOrder(Order order) {
-        orders.remove(order);
+        // FIX: Add null check for defensive programming
+        if (order != null && this.orders != null) {
+            orders.remove(order);
+        }
     }
 }
