@@ -14,6 +14,71 @@ export async function fetchMenu() {
 }
 
 /**
+ * Create a new menu item
+ */
+export async function createMenuItem(itemData) {
+  try {
+    const response = await fetch('/api/menu', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(convertToRequestFormat(itemData)),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return normalizeMenuItems([data])[0];
+  } catch (error) {
+    console.error('Error creating menu item:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update an existing menu item
+ */
+export async function updateMenuItem(id, itemData) {
+  try {
+    const response = await fetch(`/api/menu/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(convertToRequestFormat(itemData)),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return normalizeMenuItems([data])[0];
+  } catch (error) {
+    console.error('Error updating menu item:', error);
+    throw error;
+  }
+}
+
+/**
+ * Convert frontend format (with array options/notes) to backend format
+ */
+function convertToRequestFormat(itemData) {
+  return {
+    itemName: itemData.itemName,
+    itemPrice: parseFloat(itemData.itemPrice),
+    soldout: itemData.soldout || false,
+    options: (itemData.options || []).map(opt => ({
+      optionName: opt.name || opt.optionName,
+      optionPrice: parseFloat(opt.price || opt.optionPrice),
+    })),
+    notes: (itemData.notes || []).map(note => ({
+      noteName: note.name || note.noteName,
+      notePrice: parseFloat(note.price || note.notePrice),
+    })),
+  };
+}
+
+/**
  * Normalize menu items to convert map objects to arrays
  * Backend returns: options/notes as { "name": price, ... }
  * Frontend needs: [ { name: "name", price: price }, ... ]
