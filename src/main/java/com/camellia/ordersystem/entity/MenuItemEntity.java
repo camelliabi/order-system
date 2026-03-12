@@ -1,7 +1,16 @@
 package com.camellia.ordersystem.entity;
 
-import jakarta.persistence.*;
 import java.math.BigDecimal;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "menu_item")
@@ -27,13 +36,21 @@ public class MenuItemEntity {
     @Column(name = "item_picture_url")
     private String itemPictureUrl;
 
-    @OneToMany(mappedBy = "menuItem", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "menuItem", fetch = FetchType.LAZY,
+               cascade = CascadeType.ALL,
+               orphanRemoval = true)
     private java.util.List<MenuItemOptionEntity> options;
     
-    @OneToMany(mappedBy = "menuItem", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "menuItem", fetch = FetchType.LAZY,
+               cascade = CascadeType.ALL,
+               orphanRemoval = true)
     private java.util.List<MenuItemNoteEntity> notes;
 
-    public MenuItemEntity() {}
+    public MenuItemEntity() {
+        // ensure collections are non-null for easier manipulation
+        this.options = new java.util.ArrayList<>();
+        this.notes = new java.util.ArrayList<>();
+    }
 
     // getters/setters
     public Integer getItemId() { return itemId; }
@@ -55,10 +72,24 @@ public class MenuItemEntity {
     public void setItemPictureUrl(String itemPictureUrl) { this.itemPictureUrl = itemPictureUrl; }
 
     public java.util.List<MenuItemOptionEntity> getOptions() {
-    return options;
+        if (options == null) {
+            options = new java.util.ArrayList<>();
+        }
+        return options;
+    }
+    
+    public void setOptions(java.util.List<MenuItemOptionEntity> options) {
+        this.options = options;
     }
     
     public java.util.List<MenuItemNoteEntity> getNotes() {
-    return notes;
+        if (notes == null) {
+            notes = new java.util.ArrayList<>();
+        }
+        return notes;
+    }
+    
+    public void setNotes(java.util.List<MenuItemNoteEntity> notes) {
+        this.notes = notes;
     }
 }

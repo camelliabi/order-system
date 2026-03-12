@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import CustomerMenuPage from './pages/CustomerMenuPage';
 import StaffOrdersPage from './pages/StaffOrdersPage';
 import PrintReceiptPage from './pages/PrintReceiptPage';
+import MenuManagementPage from './pages/MenuManagementPage';
 
 export default function App() {
   return (
@@ -10,6 +11,7 @@ export default function App() {
         <Route path="/staff/print/:orderId" element={<PrintReceiptPage />} />
         <Route path="/" element={<StaffOrdersPage />} />
         <Route path="/customer" element={<CustomerMenuPage />} />
+        <Route path="/menu-management" element={<MenuManagementPage />} />
       </Routes>
     </Router>
   );
