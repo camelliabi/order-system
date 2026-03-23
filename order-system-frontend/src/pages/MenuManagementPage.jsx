@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchMenu, createMenuItem, updateMenuItem } from '../api/menuApi';
+import { fetchMenu, createMenuItem, updateMenuItem, deleteMenuItem } from '../api/menuApi';
 import '../styles/MenuManagementPage.css';
 
 export default function MenuManagementPage() {
@@ -128,6 +128,28 @@ export default function MenuManagementPage() {
     }));
   };
 
+  // Handle delete item including options and notes via cascade
+  const handleDeleteItem = async () => {
+    if (!selectedItemId) return;
+    if (!window.confirm('Are you sure you want to delete this item? This action cannot be undone.')) {
+      return;
+    }
+    try {
+      await deleteMenuItem(selectedItemId);
+      setMessage('Item deleted successfully!');
+      await loadMenuItems();
+      handleNewItem();
+    } catch (err) {
+      setMessage('Error deleting item: ' + (err.message || 'Unknown error'));
+      console.error(err);
+    }
+    };
+
+  // Handle cancel item creation
+  const handleCancelItem = () => {
+    handleNewItem();
+  }
+
   // Validate form
   const validateForm = () => {
     if (!formData.itemName.trim()) {
@@ -220,7 +242,11 @@ export default function MenuManagementPage() {
 
   return (
     <div className="menu-management-container">
-      <h1>Menu Management</h1>
+      {/* Header */}
+      <header className="staff-header">
+        <h1>Menu Management</h1>
+        <p className="staff-subtitle">Kitchen Management</p>
+      </header>
       
       <div className="menu-management-layout">
         {/* Left side: Menu items list */}
@@ -384,6 +410,9 @@ export default function MenuManagementPage() {
           {/* Save button */}
           <button className="btn-save" onClick={handleSave}>
             {selectedItemId ? 'Update Item' : 'Create Item'}
+          </button>
+          <button className="btn-delete" onClick={selectedItemId ? handleDeleteItem : handleCancelItem}>
+            {selectedItemId ? 'Delete Item' : 'Cancel'}
           </button>
         </div>
       </div>

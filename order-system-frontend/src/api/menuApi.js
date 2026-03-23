@@ -60,6 +60,25 @@ export async function updateMenuItem(id, itemData) {
 }
 
 /**
+ * Delete a menu item by ID
+ */
+export async function deleteMenuItem(id) {
+  try {
+    const response = await fetch(`/api/menu/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || `HTTP error! status: ${response.status}`);
+    }
+    return true;
+  } catch (error) {
+    console.error('Error deleting menu item:', error);
+    throw error;
+  }
+}
+
+/**
  * Convert frontend format (with array options/notes) to backend format
  */
 function convertToRequestFormat(itemData) {
