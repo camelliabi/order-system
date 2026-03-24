@@ -310,13 +310,14 @@ export default function MenuManagementPage() {
           </div>
 
           <div className="form-group">
-            <label>
+            <label className={`checkbox-label ${formData.soldout ? 'checked' : ''}`}>
               <input
                 type="checkbox"
                 name="soldout"
                 checked={formData.soldout}
                 onChange={handleInputChange}
               />
+              <span className="custom-checkbox">✓</span>
               Sold Out
             </label>
           </div>
