@@ -1,22 +1,26 @@
 package com.camellia.ordersystem.controller;
 
-import com.camellia.ordersystem.dto.CreateOrderRequest;
-import com.camellia.ordersystem.entity.OrderEntity;
-import com.camellia.ordersystem.entity.OrderItemEntity;
-import com.camellia.ordersystem.entity.MenuItemEntity;
-import com.camellia.ordersystem.entity.MenuItemOptionEntity;
-import com.camellia.ordersystem.entity.MenuItemNoteEntity;
-import com.camellia.ordersystem.repo.MenuItemRepository;
-import com.camellia.ordersystem.repo.OrderRepository;
-import org.springframework.web.bind.annotation.*;
+import java.math.BigDecimal;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import com.camellia.ordersystem.dto.CreateOrderRequest;
+import com.camellia.ordersystem.entity.MenuItemEntity;
+import com.camellia.ordersystem.entity.MenuItemNoteEntity;
+import com.camellia.ordersystem.entity.MenuItemOptionEntity;
+import com.camellia.ordersystem.entity.OrderEntity;
+import com.camellia.ordersystem.entity.OrderItemEntity;
+import com.camellia.ordersystem.repo.MenuItemRepository;
+import com.camellia.ordersystem.repo.OrderRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping("/api")
@@ -110,6 +114,17 @@ public class OrderController {
 
         return orderRepo.save(order);
     }
+
+    // @PatchMapping("/orders/{orderId}")
+    // public OrderEntity updateOrderStatus(@PathVariable Integer orderId, @RequestBody String newStatus) {
+    //     OrderEntity order = orderRepo.findById(orderId)
+    //             .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+    //                     org.springframework.http.HttpStatus.NOT_FOUND,
+    //                     "Order not found: " + orderId
+    //             ));
+    //     order.setOrderStatus(newStatus);
+    //     return orderRepo.save(order);
+    // }
 
     /**
      * Calculate the actual unit price for an order item.

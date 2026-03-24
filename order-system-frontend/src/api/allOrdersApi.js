@@ -45,7 +45,7 @@ export async function patchOrderStatus(orderId, newStatus) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ status: newStatus }),
+      body: JSON.stringify(newStatus),
     });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

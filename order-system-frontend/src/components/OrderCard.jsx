@@ -119,6 +119,8 @@ export default function OrderCard({ order, onAccept, onMarkReady, isProcessing }
     return `Available: ${notesText}`;
   };
 
+  const statusClass = `status-badge status-${(order.orderStatus || '').toLowerCase()}`;
+
   return (
     <div className="order-card">
       {/* Header */}
@@ -126,6 +128,7 @@ export default function OrderCard({ order, onAccept, onMarkReady, isProcessing }
         <div className="order-id-section">
           <span className="order-label">Order</span>
           <span className="order-id">#{order.orderId}</span>
+          <span className={statusClass}>Status: {order.orderStatus || 'UNKNOWN'}</span>
         </div>
         <div className="order-time">
           {formatTime(order.createdAt)}

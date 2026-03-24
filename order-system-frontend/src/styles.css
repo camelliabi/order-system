@@ -1372,6 +1372,44 @@ body {
   color: #2c3e50;
 }
 
+.status-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  margin-left: 0.6rem;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  background: #ecf0f1;
+  color: #34495e;
+}
+
+.status-badge.status-new {
+  background: #f5f6fa;
+  color: #2d3436;
+}
+
+.status-badge.status-preparing {
+  background: #ffeaa7;
+  color: #2d3436;
+}
+
+.status-badge.status-completed {
+  background: #81ecec;
+  color: #2d3436;
+}
+
+.status-badge.status-accepted {
+  background: #ffeaa7;
+  color: #2d3436;
+}
+
+.status-badge.status-ready {
+  background: #55efc4;
+  color: #2d3436;
+}
+
 .order-time {
   font-size: 0.9rem;
   color: #666;

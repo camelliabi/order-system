@@ -20,3 +20,18 @@ export async function submitOrder(payload) {
   }
   return response.json();
 }
+
+// export async function updateOrderStatus(orderId, newStatus) {
+//   const response = await fetch(`/api/orders/${orderId}`, {
+//     method: 'PATCH',
+//     headers: {
+//       'Content-Type': 'application/json',
+//     },
+//     body: JSON.stringify(newStatus),
+//   });
+//   if (!response.ok) {
+//     const error = await response.json().catch(() => ({}));
+//     throw new Error(error.message || 'Failed to update order status');
+//   }
+//   return response.json();
+// }

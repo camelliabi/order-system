@@ -57,4 +57,17 @@ public class AllOrdersController {
 
         return out;
     }
+
+    @PatchMapping("/all_orders/{orderId}")
+    public OrderEntity updateOrderStatus(@PathVariable Integer orderId, @RequestBody String newStatus) {
+        OrderEntity order = orderRepo.findById(orderId)
+                .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.NOT_FOUND,
+                        "Order not found: " + orderId
+                ));
+        order.setOrderStatus(newStatus);
+        return orderRepo.save(order);
+    } 
+
+
 }
