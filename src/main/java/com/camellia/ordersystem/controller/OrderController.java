@@ -37,6 +37,14 @@ public class OrderController {
 
     @PostMapping("/orders")
     public OrderEntity createOrder(@RequestBody CreateOrderRequest req) {
+        // FIX: Add null check for request body
+        if (req == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "Request body cannot be null"
+            );
+        }
+        
         // Log raw incoming request JSON and per-item details for debugging
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -47,10 +55,14 @@ public class OrderController {
 
         if (req.items != null) {
             for (CreateOrderRequest.CreateOrderItem itLog : req.items) {
-                logger.info("REQ ITEM menuItemId={}, chosenOption={}, notes={}, notesText={}",
-                        itLog.menuItemId, itLog.chosenOption, itLog.notes, itLog.notesText);
+                // FIX: Add null check for individual items in logging
+                if (itLog != null) {
+                    logger.info("REQ ITEM menuItemId={}, chosenOption={}, notes={}, notesText={}",
+                            itLog.menuItemId, itLog.chosenOption, itLog.notes, itLog.notesText);
+                }
             }
         }
+        
         // VALIDATION: items list must not be empty
         if (req.items == null || req.items.isEmpty()) {
             throw new org.springframework.web.server.ResponseStatusException(
@@ -58,19 +70,41 @@ public class OrderController {
                     "Order items cannot be empty"
             );
         }
+        
+        // FIX: Add validation for tableId
+        if (req.tableId == null || req.tableId.trim().isEmpty()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "Table ID is required"
+            );
+        }
 
         OrderEntity order = new OrderEntity();
-        order.setTableId(req.tableId);
+        order.setTableId(req.tableId.trim());
         order.setOrderStatus("NEW");
 
         BigDecimal total = BigDecimal.ZERO;
 
         for (CreateOrderRequest.CreateOrderItem it : req.items) {
+            // FIX: Add null check for individual order item
+            if (it == null) {
+                logger.warn("Skipping null order item");
+                continue;
+            }
+            
             // VALIDATION: menuItemId must not be null
             if (it.menuItemId == null) {
                 throw new org.springframework.web.server.ResponseStatusException(
                         org.springframework.http.HttpStatus.BAD_REQUEST,
                         "menuItemId is required for each order item"
+                );
+            }
+            
+            // FIX: Add validation for quantity
+            if (it.quantity == null || it.quantity <= 0) {
+                throw new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.BAD_REQUEST,
+                        "Quantity must be a positive number for menuItemId: " + it.menuItemId
                 );
             }
 
@@ -83,6 +117,14 @@ public class OrderController {
                             org.springframework.http.HttpStatus.BAD_REQUEST,
                             "Menu item not found: " + menuItemId
                     ));
+            
+            // FIX: Additional validation after fetching menu item
+            if (menuItem == null) {
+                throw new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Menu item data is corrupted for ID: " + menuItemId
+                );
+            }
 
             OrderItemEntity oi = new OrderItemEntity();
             oi.setMenuItem(menuItem);
@@ -91,14 +133,27 @@ public class OrderController {
             oi.setChosenOption(it.chosenOption);
 
             // Normalize notes via DTO helper (accepts notes array or notesText)
-            String notesTextToStore = it.normalizedNotesText();
+            String notesTextToStore = null;
+            try {
+                notesTextToStore = it.normalizedNotesText();
+            } catch (Exception e) {
+                logger.warn("Failed to normalize notes for menuItemId={}: {}", menuItemId, e.getMessage());
+            }
+            
             logger.debug("Normalized notes for menuItemId={}: {}", menuItemId, notesTextToStore);
-            if (notesTextToStore != null) {
-                oi.setNotesText(notesTextToStore);
+            if (notesTextToStore != null && !notesTextToStore.trim().isEmpty()) {
+                oi.setNotesText(notesTextToStore.trim());
             }
 
             // FIXED: Calculate actual unit price including option and notes
             BigDecimal unitPrice = calculateUnitPrice(menuItem, it.chosenOption, notesTextToStore);
+            
+            // FIX: Validate unit price is not null or negative
+            if (unitPrice == null || unitPrice.compareTo(BigDecimal.ZERO) < 0) {
+                logger.error("Invalid unit price calculated for menuItemId={}: {}", menuItemId, unitPrice);
+                unitPrice = BigDecimal.ZERO;
+            }
+            
             oi.setUnitPrice(unitPrice);
             
             logger.info("Item pricing: menuItemId={}, basePrice={}, chosenOption={}, notes={}, calculatedUnitPrice={}", 
@@ -107,7 +162,17 @@ public class OrderController {
             order.addItem(oi);
 
             // Calculate total using the actual unit price
-            total = total.add(unitPrice.multiply(BigDecimal.valueOf(it.quantity)));
+            // FIX: Add null check and validation before BigDecimal operations
+            try {
+                BigDecimal itemTotal = unitPrice.multiply(BigDecimal.valueOf(it.quantity));
+                total = total.add(itemTotal);
+            } catch (ArithmeticException e) {
+                logger.error("Arithmetic error calculating total for menuItemId={}: {}", menuItemId, e.getMessage());
+                throw new org.springframework.web.server.ResponseStatusException(
+                        org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Error calculating order total"
+                );
+            }
         }
 
         order.setTotalPrice(total);
@@ -131,43 +196,98 @@ public class OrderController {
      * Price = chosen option price (or base price if no option) + sum of all note prices
      */
     private BigDecimal calculateUnitPrice(MenuItemEntity menuItem, String chosenOption, String notesText) {
+        // FIX: Add null check for menuItem
+        if (menuItem == null) {
+            logger.error("MenuItem is null in calculateUnitPrice");
+            return BigDecimal.ZERO;
+        }
+        
         BigDecimal price = BigDecimal.ZERO;
+        
+        // FIX: Add null check for base price
+        BigDecimal basePrice = menuItem.getItemPrice();
+        if (basePrice == null) {
+            logger.warn("Base price is null for menuItemId={}", menuItem.getItemId());
+            basePrice = BigDecimal.ZERO;
+        }
 
         // 1. Get the option price (if option is chosen, use its price; otherwise use base price)
         if (chosenOption != null && !chosenOption.trim().isEmpty()) {
-            // Find the matching option
-            BigDecimal optionPrice = menuItem.getOptions().stream()
-                    .filter(opt -> opt.getOptionName().equals(chosenOption.trim()))
-                    .findFirst()
-                    .map(MenuItemOptionEntity::getOptionPrice)
-                    .orElse(menuItem.getItemPrice()); // Fallback to base price if option not found
-            price = price.add(optionPrice);
-            logger.debug("Found option '{}' with price: {}", chosenOption, optionPrice);
+            String trimmedOption = chosenOption.trim();
+            
+            // FIX: Add null check for options list
+            List<MenuItemOptionEntity> options = menuItem.getOptions();
+            if (options != null && !options.isEmpty()) {
+                try {
+                    BigDecimal optionPrice = options.stream()
+                            .filter(opt -> opt != null && opt.getOptionName() != null) // FIX: Filter out null options
+                            .filter(opt -> opt.getOptionName().equals(trimmedOption))
+                            .findFirst()
+                            .map(MenuItemOptionEntity::getOptionPrice)
+                            .orElse(basePrice); // Fallback to base price if option not found
+                    
+                    // FIX: Validate option price is not null
+                    if (optionPrice != null) {
+                        price = price.add(optionPrice);
+                        logger.debug("Found option '{}' with price: {}", trimmedOption, optionPrice);
+                    } else {
+                        price = price.add(basePrice);
+                        logger.warn("Option price is null for option '{}', using base price", trimmedOption);
+                    }
+                } catch (Exception e) {
+                    logger.error("Error finding option '{}': {}", trimmedOption, e.getMessage());
+                    price = price.add(basePrice);
+                }
+            } else {
+                // No options available, use base price
+                price = price.add(basePrice);
+                logger.debug("No options available for menuItemId={}, using base price", menuItem.getItemId());
+            }
         } else {
             // No option chosen, use base price
-            price = price.add(menuItem.getItemPrice());
+            price = price.add(basePrice);
         }
 
         // 2. Add prices for all selected notes
         if (notesText != null && !notesText.trim().isEmpty()) {
-            // Split notes by comma (as they're stored as "note1, note2, note3")
-            String[] noteNames = notesText.split(",");
-            for (String noteName : noteNames) {
-                String trimmedNoteName = noteName.trim();
-                if (!trimmedNoteName.isEmpty()) {
-                    // Find matching note and add its price
-                    // FIXED: BigDecimal is immutable, must reassign
-                    BigDecimal notePrice = menuItem.getNotes().stream()
-                            .filter(note -> note.getNoteName().equals(trimmedNoteName))
-                            .findFirst()
-                            .map(MenuItemNoteEntity::getNotePrice)
-                            .orElse(BigDecimal.ZERO);
-                    
-                    if (notePrice.compareTo(BigDecimal.ZERO) > 0) {
-                        price = price.add(notePrice);
-                        logger.debug("Found note '{}' with price: {}", trimmedNoteName, notePrice);
+            // FIX: Add null check for notes list
+            List<MenuItemNoteEntity> notes = menuItem.getNotes();
+            if (notes != null && !notes.isEmpty()) {
+                // Split notes by comma (as they're stored as "note1, note2, note3")
+                String[] noteNames = notesText.split(",");
+                
+                // FIX: Add null check for split result
+                if (noteNames != null) {
+                    for (String noteName : noteNames) {
+                        // FIX: Add null check for individual note name
+                        if (noteName == null) {
+                            continue;
+                        }
+                        
+                        String trimmedNoteName = noteName.trim();
+                        if (!trimmedNoteName.isEmpty()) {
+                            try {
+                                // Find matching note and add its price
+                                BigDecimal notePrice = notes.stream()
+                                        .filter(note -> note != null && note.getNoteName() != null) // FIX: Filter out null notes
+                                        .filter(note -> note.getNoteName().equals(trimmedNoteName))
+                                        .findFirst()
+                                        .map(MenuItemNoteEntity::getNotePrice)
+                                        .orElse(BigDecimal.ZERO);
+                                
+                                // FIX: Validate note price
+                                if (notePrice != null && notePrice.compareTo(BigDecimal.ZERO) > 0) {
+                                    price = price.add(notePrice);
+                                    logger.debug("Found note '{}' with price: {}", trimmedNoteName, notePrice);
+                                }
+                            } catch (Exception e) {
+                                logger.error("Error processing note '{}': {}", trimmedNoteName, e.getMessage());
+                            }
+                        }
                     }
                 }
+            } else {
+                logger.debug("No notes available for menuItemId={}", menuItem.getItemId());
             }
         }
 

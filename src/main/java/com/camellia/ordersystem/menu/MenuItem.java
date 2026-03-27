@@ -18,21 +18,48 @@ public class MenuItem {
 	
 	
 	public MenuItem() {
-		
+		// FIX: Ensure maps are initialized
+		this.options = new HashMap<>();
+		this.notes = new HashMap<>();
 	}
 
 	public MenuItem(int itemId, String itemName, double itemPrice) {
+		// FIX: Add validation for price
+		if (itemPrice < 0) {
+			throw new IllegalArgumentException("Item price cannot be negative: " + itemPrice);
+		}
+		
 		this.itemId = itemId;
 		this.itemName = itemName;	
 		this.itemPrice = itemPrice;
+		// FIX: Ensure maps are initialized
+		this.options = new HashMap<>();
+		this.notes = new HashMap<>();
 	}
 
 	public MenuItem(int itemId, String itemName, double itemPrice, Map<String, Double> options, Map<String, Double> notes) {
+		// FIX: Add validation for price
+		if (itemPrice < 0) {
+			throw new IllegalArgumentException("Item price cannot be negative: " + itemPrice);
+		}
+		
 		this.itemId = itemId;
 		this.itemName = itemName;	
 		this.itemPrice = itemPrice;
-		this.options = options;
-		this.notes = notes;
+		
+		// FIX: Defensive copy and null check for options
+		if (options != null) {
+			this.options = new HashMap<>(options);
+		} else {
+			this.options = new HashMap<>();
+		}
+		
+		// FIX: Defensive copy and null check for notes
+		if (notes != null) {
+			this.notes = new HashMap<>(notes);
+		} else {
+			this.notes = new HashMap<>();
+		}
 	}
 	
 	//getters and setters
@@ -66,6 +93,10 @@ public class MenuItem {
 	}
 	
 	public void setItemPrice(double price) {
+		// FIX: Add validation for negative price
+		if (price < 0) {
+			throw new IllegalArgumentException("Item price cannot be negative: " + price);
+		}
 		this.itemPrice = price;
 	}
 	
@@ -86,21 +117,64 @@ public class MenuItem {
 	}
 
 	public Map<String, Double> getOptions() {
-		return options;
+		// FIX: Return defensive copy to prevent external modification
+		return options != null ? new HashMap<>(options) : new HashMap<>();
 	}
+	
 	public void setOptions(Map<String, Double> options) {
-		this.options = options;
+		// FIX: Defensive copy and null check
+		if (options != null) {
+			this.options = new HashMap<>(options);
+		} else {
+			this.options = new HashMap<>();
+		}
 	}
+	
 	public Map<String, Double> getNotes() {
-		return notes;
+		// FIX: Return defensive copy to prevent external modification
+		return notes != null ? new HashMap<>(notes) : new HashMap<>();
 	}
+	
 	public void setNotes(Map<String, Double> notes) {
-		this.notes = notes;
+		// FIX: Defensive copy and null check
+		if (notes != null) {
+			this.notes = new HashMap<>(notes);
+		} else {
+			this.notes = new HashMap<>();
+		}
 	}
+	
 	public void addOption(String optionName, double optionPrice) {
-		this.options.put(optionName, optionPrice);
+		// FIX: Add validation for option name and price
+		if (optionName == null || optionName.trim().isEmpty()) {
+			throw new IllegalArgumentException("Option name cannot be null or empty");
+		}
+		if (optionPrice < 0) {
+			throw new IllegalArgumentException("Option price cannot be negative: " + optionPrice);
+		}
+		
+		// FIX: Ensure options map is initialized
+		if (this.options == null) {
+			this.options = new HashMap<>();
+		}
+		
+		this.options.put(optionName.trim(), optionPrice);
 	}
+	
 	public void addNote(String noteName, double notePrice) {
-		this.notes.put(noteName, notePrice);
+		// FIX: Add validation for note name and price
+		if (noteName == null || noteName.trim().isEmpty()) {
+			throw new IllegalArgumentException("Note name cannot be null or empty");
+		}
+		if (notePrice < 0) {
+			throw new IllegalArgumentException("Note price cannot be negative: " + notePrice);
+		}
+		
+		// FIX: Ensure notes map is initialized
+		if (this.notes == null) {
+			this.notes = new HashMap<>();
+		}
+		
+		this.notes.put(noteName.trim(), notePrice);
 	}
 }
